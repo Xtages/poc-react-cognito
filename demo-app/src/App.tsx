@@ -1,53 +1,38 @@
 import React from 'react';
 import './App.css';
-import {BrowserRouter as Router, Link, Route, Switch} from 'react-router-dom';
+import {BrowserRouter, Switch} from 'react-router-dom';
+import NavBar from './components/nav/NavBar';
+import {AuthProvider} from './hooks/useAuth';
+import AuthenticatedRoute from './components/authn/AuthenticatedRoute';
+import UnauthenticatedOnlyRoute from './components/authn/UnauthenticatedOnlyRoute';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
-      <Router>
-        <div>
-          <nav>
-            <ul>
-              <li>
-                <Link to="/">Home</Link>
-              </li>
-              <li>
-                <Link to="/about">About</Link>
-              </li>
-              <li>
-                <Link to="/users">Users</Link>
-              </li>
-            </ul>
-          </nav>
-
-          {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
+      <AuthProvider>
+        <BrowserRouter>
           <Switch>
-            <Route path="/about">
-              <About/>
-            </Route>
-            <Route path="/users">
-              <Users/>
-            </Route>
-            <Route path="/">
-              <Home/>
-            </Route>
+            <UnauthenticatedOnlyRoute path="/login">
+              <LoginPage/>
+            </UnauthenticatedOnlyRoute>
+            <AuthenticatedRoute path="/about">
+              <AboutPage/>
+            </AuthenticatedRoute>
+            <AuthenticatedRoute path="/">
+              <HomePage/>
+            </AuthenticatedRoute>
           </Switch>
-        </div>
-      </Router>
+        </BrowserRouter>
+      </AuthProvider>
   );
 }
 
-function Home() {
-  return <h2>Home</h2>;
+function HomePage() {
+  return (<><NavBar/><h2>Home</h2></>);
 }
 
-function About() {
-  return <h2>About</h2>;
-}
-
-function Users() {
-  return <h2>Users</h2>;
+function AboutPage() {
+  return (<><NavBar/><h2>About Page</h2></>);
 }
 
 export default App;
