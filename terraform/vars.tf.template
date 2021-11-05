@@ -1,0 +1,11 @@
+variable "env" {
+  default = "playground"
+}
+
+variable "aws_region" {
+  default = "__FILL_ME__"
+}
+
+variable "account_id" {
+  default = "__FILL_ME__"
+}
