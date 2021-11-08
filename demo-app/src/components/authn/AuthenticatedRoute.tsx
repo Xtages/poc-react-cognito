@@ -6,7 +6,7 @@ import {useAuth} from '../../hooks/useAuth';
  * A {@link Route} that will only render {@link RouteProps.component} if there is
  * an authenticated user otherwise it will redirect to `/login`.
  */
-export default function AuthdRoute({location, ...props}: RouteProps) {
+export default function AuthenticatedRoute({location, ...props}: RouteProps) {
   const auth = useAuth();
 
   if (auth.inProgress) {

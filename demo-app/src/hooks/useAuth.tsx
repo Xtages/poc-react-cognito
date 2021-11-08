@@ -13,7 +13,9 @@ CognitoAuth.configure({
 /**
  * Properties for a User. {@link email} is used as the `username` for the user.
  */
-type UserProperties = {
+type User = {
+  id: string;
+
   name: string;
 
   email: string;
@@ -22,61 +24,22 @@ type UserProperties = {
 }
 
 /**
- * Object representing the currently authenticated user.
+ * Turns a {@link CognitoUser} into a {@link User}.
+ *
+ * @param cognitoUser - The CognitoUser.
+ * @returns A {@link Promise<User>} from the {@link cognitoUser}.
  */
-export class User implements UserProperties {
-  /** This is the Cognito id of the user */
-  readonly id: string;
-
-  /** User's name */
-  readonly name: string;
-
-  /** User's email */
-  readonly email: string;
-
-  /** User's country */
-  readonly country: string;
-
-  /** Cognito user */
-  readonly cognitoUser: CognitoUser;
-
-  constructor(
-      {
-        id,
-        name,
-        email,
-        country,
-        cognitoUser,
-      }: UserProperties & {
-        id: string;
-        cognitoUser: CognitoUser;
-      }) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.country = country;
-    this.cognitoUser = cognitoUser;
-  }
-
-  /**
-   * Turns a {@link CognitoUser} into a {@link User}.
-   *
-   * @param cognitoUser - The CognitoUser.
-   * @returns A {@link Promise<User>} from the {@link cognitoUser}.
-   */
-  static async fromCognitoUser(cognitoUser: CognitoUser): Promise<User> {
-    const attrList = await CognitoAuth.userAttributes(cognitoUser);
-    const attrs = Object.fromEntries(
-        attrList.map((attr) => [attr.getName(), attr.getValue()]),
-    );
-    return new User({
-      id: cognitoUser.getUsername(),
-      name: attrs.name,
-      email: attrs.email,
-      country: attrs['custom:country'],
-      cognitoUser: cognitoUser,
-    });
-  }
+async function cognitoUserToUser(cognitoUser: CognitoUser): Promise<User> {
+  const attrList = await CognitoAuth.userAttributes(cognitoUser);
+  const attrs = Object.fromEntries(
+      attrList.map((attr) => [attr.getName(), attr.getValue()]),
+  );
+  return {
+    id: cognitoUser.getUsername(),
+    name: attrs.name,
+    email: attrs.email,
+    country: attrs['custom:country'],
+  };
 }
 
 type Auth = ReturnType<typeof useProvideAuth>;
@@ -111,7 +74,7 @@ export function useAuth() {
 /**
  * {@link email} & {@link password} credentials.
  */
-export type Credentials = Pick<UserProperties, 'email'> & {
+export type Credentials = Pick<User, 'email'> & {
   password: string;
 };
 
@@ -144,7 +107,7 @@ function useProvideAuth() {
     if (cognitoUser.challengeName) {
       return cognitoUser.challengeName;
     }
-    setUser(await User.fromCognitoUser(cognitoUser));
+    setUser(await cognitoUserToUser(cognitoUser));
     setAuthInProgress(false);
     return user!!;
   }
@@ -170,7 +133,7 @@ function useProvideAuth() {
         password,
         name,
         country,
-      }: Credentials & UserProperties
+      }: Credentials & Exclude<User, 'id'>
   ): Promise<User | null> {
     const result = await CognitoAuth.signUp({
       username: email,
@@ -181,7 +144,7 @@ function useProvideAuth() {
       },
     });
     if (result.user != null && result.userConfirmed) {
-      setUser(await User.fromCognitoUser(result.user));
+      setUser(await cognitoUserToUser(result.user));
       return user;
     }
     setUser(null);
@@ -195,7 +158,7 @@ function useProvideAuth() {
     try {
       const user: CognitoUserWithChallenge = await CognitoAuth.currentAuthenticatedUser();
       if (!user.challengeName) {
-        setUser(await User.fromCognitoUser(user));
+        setUser(await cognitoUserToUser(user));
         setAuthInProgress(false);
       }
     } catch (e) {
