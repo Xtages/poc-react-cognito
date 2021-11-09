@@ -11,6 +11,3 @@ __Replace the vars in `demo-app/.env` with appropriate values for your Cognito u
 ## Terraform
 
 The Terraform code to provision Cognito can be found under [terraform](terraform/).
-
-__Replace the vars in `terraform/vars.tf.template` with appropriate values for your AWS account and rename the file
-to `vars.tf`.__
